@@ -1,7 +1,7 @@
 name: pulse
 on:
   schedule:
-    - cron: "0 * * * *"   # hourly; each run loops ~55 min => effective 1-min scanning
+    - cron: "0,30 * * * *"   # staggered starts; new run replaces the old -> no gaps
   workflow_dispatch: {}
 concurrency:
   group: pulse
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 58
     steps:
-      - name: Scan every 60s for ~55 min
+      - name: Scan every 60s
         run: |
           end=$((SECONDS+3300))
           while [ $SECONDS -lt $end ]; do

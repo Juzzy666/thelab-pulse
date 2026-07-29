@@ -1,8 +1,10 @@
 name: pulse
 on:
   schedule:
-    - cron: "0,30 * * * *"   # staggered starts; new run replaces the old -> no gaps
+    - cron: "0,30 * * * *"
   workflow_dispatch: {}
+permissions:
+  contents: write
 concurrency:
   group: pulse
   cancel-in-progress: true
@@ -11,11 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 58
     steps:
-      - name: Scan every 60s
+      - uses: actions/checkout@v4
+      - name: Scan every 60s; commit state every 10th pass
         run: |
+          mkdir -p state
+          i=0
           end=$((SECONDS+3300))
           while [ $SECONDS -lt $end ]; do
             curl -sf --max-time 100 "https://thelab.opentab.digital/api/flow" -o /dev/null || true
-            curl -sf --max-time 60  "https://thelab.opentab.digital/api/mlb"  -o /dev/null || true
+            i=$((i+1))
+            if [ $((i % 10)) -eq 0 ]; then
+              curl -sf --max-time 60 "https://thelab.opentab.digital/api/flow?dump=1" -o state/dump.json || true
+              if [ -s state/dump.json ] && ! grep -q '"st":null' state/dump.json; then
+                git config user.email "pulse@thelab"; git config user.name "pulse"
+                git add state/dump.json
+                git commit -q -m "state snapshot" || true
+                git pull -q --rebase || true
+                git push -q || true
+              fi
+            fi
             sleep 60
           done

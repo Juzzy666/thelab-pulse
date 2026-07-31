@@ -11,14 +11,14 @@ concurrency:
 jobs:
   loop:
     runs-on: ubuntu-latest
-    timeout-minutes: 58
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - name: Scan every 60s; commit state every 10th pass
         run: |
           mkdir -p state
           i=0
-          end=$((SECONDS+3300))
+          end=$((SECONDS+20400))
           while [ $SECONDS -lt $end ]; do
             curl -sf --max-time 100 "https://thelab.opentab.digital/api/flow" -o /dev/null || true
             curl -sf --max-time 100 "https://thelab.opentab.digital/api/pmflow" -o /dev/null || true

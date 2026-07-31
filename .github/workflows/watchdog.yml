@@ -1,0 +1,29 @@
+name: watchdog
+on:
+  schedule:
+    - cron: "15,45 * * * *"
+  workflow_dispatch: {}
+permissions:
+  actions: write
+concurrency:
+  group: watchdog
+  cancel-in-progress: true
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Restart pulse if no scan loop is running
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          running=$(gh api "repos/${{ github.repository }}/actions/workflows/pulse.yml/runs?status=in_progress&per_page=1" --jq '.total_count')
+          queued=$(gh api "repos/${{ github.repository }}/actions/workflows/pulse.yml/runs?status=queued&per_page=1" --jq '.total_count')
+          echo "pulse in_progress=$running queued=$queued"
+          if [ "$running" = "0" ] && [ "$queued" = "0" ]; then
+            echo "pulse is dark — dispatching"
+            gh api -X POST "repos/${{ github.repository }}/actions/workflows/pulse.yml/dispatches" -f ref=main
+            curl -s -X POST "https://ntfy.sh" -H "content-type: application/json" -d '{
+              "topic":"jcm-thelab-13c39dd8","title":"🩹 The Lab — scanner self-healed",
+              "message":"Pulse loop was dark; watchdog restarted it.","priority":2,"tags":["adhesive_bandage"]}' || true
+          fi

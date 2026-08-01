@@ -23,6 +23,9 @@ jobs:
             curl -sf --max-time 100 "https://thelab.opentab.digital/api/flow" -o /dev/null || true
             curl -sf --max-time 100 "https://thelab.opentab.digital/api/pmflow" -o /dev/null || true
             i=$((i+1))
+            if [ $((i % 5)) -eq 0 ]; then
+              curl -sf --max-time 120 "https://thelab.opentab.digital/api/mlb" -o /dev/null || true
+            fi
             if [ $((i % 10)) -eq 0 ]; then
               curl -sf --max-time 60 "https://thelab.opentab.digital/api/flow?dump=1" -o state/dump.json || true
               curl -sf --max-time 60 "https://thelab.opentab.digital/api/pmflow?dump=1" -o state/pmdump.json || true

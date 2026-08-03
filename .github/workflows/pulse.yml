@@ -26,12 +26,21 @@ jobs:
             if [ $((i % 5)) -eq 0 ]; then
               curl -sf --max-time 120 "https://thelab.opentab.digital/api/mlb" -o /dev/null || true
             fi
-            if [ $((i % 10)) -eq 0 ]; then
-              curl -sf --max-time 60 "https://thelab.opentab.digital/api/flow?dump=1" -o state/dump.json || true
-              curl -sf --max-time 60 "https://thelab.opentab.digital/api/pmflow?dump=1" -o state/pmdump.json || true
+            if [ $((i % 5)) -eq 0 ]; then
+              # freshness-guarded commits: NEVER overwrite good state with a cold instance's
+              # older dump — this exact clobber erased ledger history twice (blob suspended)
               ok=0
-              [ -s state/dump.json ] && ! grep -q '"st":null' state/dump.json && ok=1
-              [ -s state/pmdump.json ] && ! grep -q '"st":null' state/pmdump.json && ok=1
+              for f in dump:flow pmdump:pmflow; do
+                name="${f%%:*}"; api="${f##*:}"
+                curl -sf --max-time 60 "https://thelab.opentab.digital/api/$api?dump=1" -o /tmp/$name.json || continue
+                [ -s /tmp/$name.json ] || continue
+                grep -q '"st":null' /tmp/$name.json && continue
+                newat=$(jq -r '.at // 0' /tmp/$name.json 2>/dev/null || echo 0)
+                oldat=$(jq -r '.at // 0' state/$name.json 2>/dev/null || echo 0)
+                if [ "${newat%.*}" -gt "${oldat%.*}" ] 2>/dev/null; then
+                  cp /tmp/$name.json state/$name.json; ok=1
+                fi
+              done
               if [ $ok -eq 1 ]; then
                 git config user.email "pulse@thelab"; git config user.name "pulse"
                 git add state/ || true

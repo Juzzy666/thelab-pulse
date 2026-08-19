@@ -11,7 +11,7 @@
       }
       var next = current === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
-      try { localStorage.setItem('pc-theme', next); } catch (e) {}
+      try { localStorage.setItem('jp-theme', next); } catch (e) {}
       toggle.setAttribute('aria-label', next === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
     });
   }

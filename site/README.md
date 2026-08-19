@@ -1,4 +1,4 @@
-# Peptide Commons
+# juzzypeps
 
 A vendor-neutral peptide reference and community. Static HTML, no build step, no
 dependencies, and no third-party requests of any kind.

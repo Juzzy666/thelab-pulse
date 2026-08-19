@@ -76,7 +76,7 @@
 
     indexEl.hidden = true;
     detailEl.hidden = false;
-    document.title = c.name + ' — Compound Library — Peptide Commons';
+    document.title = c.name + ' — Compound Library — juzzypeps';
 
     var tierInfo = DATA.meta.tiers[String(c.tier)];
     var pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + encodeURIComponent(c.name);
@@ -144,7 +144,7 @@
     } else {
       detailEl.hidden = true;
       indexEl.hidden = false;
-      document.title = 'Compound Library — Peptide Commons';
+      document.title = 'Compound Library — juzzypeps';
     }
   }
 
